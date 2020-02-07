@@ -1,0 +1,103 @@
+@keyframes chess-red-highlight {
+  from {
+    border: 0 #f40 solid;
+  } to {
+    border: 30rpx #fff solid;
+  }
+}
+
+@keyframes chess-blue-highlight {
+  from {
+    border: 0 #fff solid;
+  } to {
+    border: 30rpx yellow solid;
+  }
+}
+
+.other {
+  height: 200rpx;
+}
+
+.chessboard {
+  display: flex;
+  justify-content: space-around;
+  height: 700rpx;
+}
+
+.board-background {
+  height: 700rpx;
+  width: 700rpx;
+  padding: 75rpx;
+  margin-top: -15rpx;
+}
+
+.row {
+  display: flex;
+  justify-content: space-around;
+  height: 150rpx;
+  background-color: #ccc
+}
+
+.col {
+  width: 150rpx;
+  height: 150rpx;
+  border: 1px solid #fff;
+  box-sizing: border-box;
+}
+
+.chesses {
+  position: fixed;
+  top: 200rpx;
+  height: 700rpx;
+  width: 100%;
+  margin-top: 10rpx;
+}
+
+.chesses-row {
+  display: flex;
+  justify-content: space-around;
+  height: 150rpx;
+}
+
+.chess-wrapper {
+  height: 100rpx;
+  width: 100rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chess {
+  width: 50rpx;
+  height: 50rpx;
+}
+
+image {
+  position: relative;
+  width: 100rpx;
+  height: 100rpx;
+  top: -35rpx;
+  left: -15rpx;
+}
+
+.chess-red-high-light {
+  width: 50rpx;
+  height: 50rpx;
+  background-color: #f00;
+  border-radius: 50%;
+  animation: chess-red-highlight .5s ease-in-out infinite alternate-reverse;
+  border: 0rpx #f40 double
+}
+
+.chess-blue-high-light {
+  width: 50rpx;
+  height: 50rpx;
+  background-color: #f00;
+  border-radius: 50%;
+  animation: chess-blue-highlight .5s ease-in-out infinite alternate-reverse;
+  border: 0rpx #f40 double
+}
+
+.me {
+  height: 200rpx;
+}

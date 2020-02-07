@@ -1,0 +1,50 @@
+<view class="wrapper">
+  <!-- 对方 -->
+  <view class="other">
+
+  </view>
+
+  <!-- 棋盘 -->
+  <view class="chessboard">
+    <view class="board-background">
+      <view class="row" wx:for="{{4}}" wx:key="*this">
+        <view class="col" wx:for="{{4}}" wx:key="*this">
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 棋子 -->
+  <view class="chesses">
+    <view class="chesses-row" wx:for-index="x" wx:for="{{chessesArr}}" wx:key="x">
+      <view class="chess-col" wx:for="{{item}}" wx:key="xy" wx:for-index='y'>
+        <view class="chess-wrapper"
+              bindtap="checkoutChess"
+              bindlongpress="removeOne"
+              data-chessIndex="{{[x, y]}}"
+        >
+          <view wx:if="{{item === 1}}" class="chess">
+            <image src="../../assets/chess/player-a.png"></image>
+          </view>
+          <view wx:if="{{item === 2}}" class="chess">
+            <image src="../../assets/chess/player-b.png"></image>
+          </view>
+          <view wx:if="{{item === 3}}" class="chess-red-high-light">
+            <image src="../../assets/chess/player-a.png"></image>
+          </view>
+          <view wx:if="{{item === 4}}" class="chess-blue-high-light">
+            <image src="../../assets/chess/player-b.png"></image>
+          </view>
+          <view wx:if="{{item === 5}}" class="chess-red-high-light" catchtap="moveToHere" data-chessIndex="{{[x, y]}}"></view>
+          <view wx:if="{{item === 6}}" class="chess-blue-high-light" catchtap="moveToHere" data-chessIndex="{{[x, y]}}"></view>
+          <view wx:if="{{item === 0}}" class="chess"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我方 -->
+  <view class="me">
+
+  </view>
+</view>
