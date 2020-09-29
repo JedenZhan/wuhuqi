@@ -10,12 +10,48 @@
   from {
     border: 0 #fff solid;
   } to {
-    border: 30rpx yellow solid;
+    border: 30rpx #ff0 solid;
   }
 }
 
-.other {
+@keyframes highlight-header {
+  from {
+    border: 1px solid #fff;
+  } to {
+    border: 10px solid #ccc
+  }
+}
+
+.other, .me {
   height: 200rpx;
+  display: flex;
+  justify-content: space-between;
+}
+
+.image-wrapper {
+  width: 30%;
+  text-align: center;
+  align-self: center;
+}
+
+.info-wrapper {
+  width: 70%;
+  align-self: center;
+}
+
+.red-message {
+  text-align: right
+}
+
+.head-image {
+  height: 150rpx;
+  width: 150rpx;
+  border-radius: 50%;
+  border: 1px solid #fff;
+}
+
+.highlight-header {
+  animation: highlight-header .5s ease-in-out infinite alternate-reverse;
 }
 
 .chessboard {
@@ -72,7 +108,7 @@
   height: 50rpx;
 }
 
-image {
+.chess-wrapper image {
   position: relative;
   width: 100rpx;
   height: 100rpx;
@@ -96,8 +132,4 @@ image {
   border-radius: 50%;
   animation: chess-blue-highlight .5s ease-in-out infinite alternate-reverse;
   border: 0rpx #f40 double
-}
-
-.me {
-  height: 200rpx;
 }

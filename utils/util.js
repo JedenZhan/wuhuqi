@@ -31,8 +31,11 @@ const getDataByPath = (obj, url) => {
 
 const unip = arr => Array.from(new Set(arr))
 
+const setUser = () => 'User' + Math.floor(Math.random() * 1000000)
+
 module.exports = {
   formatTime,
   getDataByPath,
-  unip
+  unip,
+  setUser
 }

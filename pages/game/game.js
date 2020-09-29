@@ -1,7 +1,10 @@
-const utils = require('../../utils/util.js')
+const utils = require('../../utils/util.js'),
+ app = getApp(),
+ parse = JSON.parse
 
 Page({
   data: {
+    socket: null,
     /* 
       0 as none, 
       1 as red, 
@@ -11,6 +14,13 @@ Page({
       5 as highlight-red-space
       6 as highlight-blue-space
     */
+    // chessesArr: [
+    //   [1, 2, 1, 2, 1],
+    //   [2, 2, 1, 2, 2],
+    //   [1, 1, 2, 1, 1],
+    //   [2, 1, 1, 2, 1],
+    //   [1, 2, 1, 1, 2]
+    // ],
     chessesArr: [
       [0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0],
@@ -21,19 +31,62 @@ Page({
     chessesArrClone: [], // 棋子状态副本
     redNum: 0, // 红方棋子数
     blueNum: 0, // 蓝方棋子数
-    player: 1, // 1 is me, 2 is opponent
+    player: 1, // 1 as me, 2 as opponent
     highLighting: false,
     addChessNum: 0, // 默认多下 0 个
     deleteChessNum: 0, // 默认删除对方 0 个
     currentStep: 1, // 当前游戏阶段: 1 as 下棋, 2 as delete, 3 as move
     step2ChessNum: 0,
-    currentTouchIndex: []
+    currentTouchIndex: [],
+
+    // 玩家信息
+    mine: {
+      id: utils.setUser(),
+      userName: '',
+      headerUrl: ''
+    },
+    opponent: {
+      username: 'test',
+      headerUrl: ''
+    },
+    // 游戏信息
+    redMessage: 'test message',
+    blueMessage: 'test message'
   },
   onLoad (options) {
+    const _this = this
+    const userInfo = app.globalData.userInfo
+    if (userInfo) {
+      this.setData({
+        mine: {
+          username: userInfo.nickName,
+          headerUrl: userInfo.avatarUrl
+        }
+      })
+    }
 
+    const socket = wx.connectSocket({
+      url: 'ws://localhost:8080',
+      success(res) {
+        console.log('连接成功', res)
+      }
+    })
+
+    socket.onOpen(() => {
+      _this.setData({
+        socket
+      })
+    })
   },
   onReady () {
+    const socket = this.data.socket
 
+    // wx.showLoading({
+    //   title: '正在匹配玩家',
+    //   mask: true,
+    // })
+
+    this.sendMessage('finding')
   },
   onShow () {
     wx.showToast({
@@ -41,8 +94,62 @@ Page({
       duration: 3000,
       icon: 'none'
     })
+
+    // -----------------------------------------------socket 处理
+    const socket = this.data.socket
+    
+    // -----------------------------------------------------------
+
+    setTimeout(() => {
+      this.registerSocket()
+    }, 1000)
   },
 
+  registerSocket () {
+    const socket = this.data.socket
+    socket.onMessage(m => {
+      let parsedObj = parse(m.data)
+      let type = parsedObj.type,
+        data = parsedObj.data
+
+      switch (type) {
+        case 'step1':
+          this.setData({
+            chessesArr: data.chessesArr
+          })
+          break
+      }
+    })
+  },
+
+  sendMessage (type, m) {
+    const { socket } = this.data
+    if (socket) {
+      socket.send({
+        data: JSON.stringify({
+          type,
+          data: m
+        })
+      })
+    } else {
+      console.log('no socket')
+    }
+  },
+
+  setMessage (message) {
+    const { player } = this.data
+    if (player === 1) {
+      this.setData({
+        redMessage: message,
+        blueMessage: ''
+      })
+    } else {
+      this.setData({
+        blueMessage: message,
+        redMessage: ''
+      })
+    }
+  },
   exchangePlayer () {
     let player = this.data.player
     this.setData({
@@ -66,11 +173,7 @@ Page({
     }
     let canMovePositions = this.checkCanMove(x, y)
     if (canMovePositions.length === 0) {
-      wx.showToast({
-        title: '抱歉, 当前棋子不可移动',
-        icon: 'none',
-        duration: 1000
-      })
+      this.setMessage('抱歉, 当前棋子不可移动')
     }
 
     this.setData({
@@ -92,8 +195,6 @@ Page({
       oblique = this.checkOblique(x, y),
       five = this.checkColAndRow(x, y)
 
-    console.log(`本次移动, 形成${found.foundNum}方, ${oblique.three} 小斜, ${oblique.four}大斜, ${oblique.five}大通, ${five.colAndRowNum}五通`)
-
     let foundNum = found.foundNum,
       smallOblique = oblique.three,
       middleOblique = oblique.four,
@@ -109,10 +210,7 @@ Page({
     this.highLightChess(...needHighLightChess)
 
     if (this.data.deleteChessNum > 0) {
-      wx.showToast({
-        title: `根据成项规则, 当前您可以删除对方${deleteChessNum}个棋子`,
-        icon: 'none'
-      })
+      this.setMessage(`根据成项规则, 您可以拿掉对方 ${deleteChessNum} 个棋子`)
       this.startDeleteChess(deleteChessNum)
     } else {
       this.exchangePlayer()
@@ -132,15 +230,14 @@ Page({
   deleteOpponentChess (e) {
     if (this.data.highLighting) return
     const [x, y] = e.currentTarget.dataset.chessindex
-    let { chessesArr, player, deleteChessNum } = this.data
+    let { chessesArr, player, deleteChessNum, redNum, blueNum } = this.data
 
     if (player === chessesArr[x][y]) {
-      wx.showToast({
-        title: '这是你的棋子...',
-        icon: 'none'
-      })
+      this.setMessage('这是你的棋子...')
       return
     } else {
+      player === 1 && --blueNum
+      player === 2 && --redNum
       wx.showModal({
         title: '确定删除对方的这一个嘛 ?',
         content: '取消以返回',
@@ -149,18 +246,22 @@ Page({
             chessesArr[x][y] = 0
             this.setData({
               chessesArr,
-              deleteChessNum: --deleteChessNum
+              deleteChessNum: --deleteChessNum,
+              redNum,
+              blueNum
             })
           }
           if (this.data.deleteChessNum === 0) {
-            wx.showToast({
-              title: '删除机会已用完',
-              icon: 'none'
-            })
+            this.setMessage('删除机会用完啦')
             this.setData({
               player: player === 1 ? 2 : 1,
               currentStep: 3, // 继续第三阶段
             })
+            if (redNum < 3) {
+              this.setMessage('火龙果输啦')
+            } else if (blueNum < 3) {
+              this.setMessage('火龙果赢啦')
+            }
           }
         }
       })
@@ -222,14 +323,11 @@ Page({
     if (currentStep === 4) this.deleteOpponentChess(e)
     if (currentStep !== 2) return
     const [x, y] = e.currentTarget.dataset.chessindex
-    let { chessesArr, player, step2ChessNum } = this.data
+    let { chessesArr, player, step2ChessNum, redNum, blueNum } = this.data
     
 
     if (this.data.player === chessesArr[x][y]) {
-      wx.showToast({
-        title: '这是你的棋子...',
-        icon: 'none'
-      })
+      this.setMessage('这是你的棋子...')
       return
     } else {
       wx.showModal({
@@ -238,10 +336,14 @@ Page({
         success: e => {
           if (e.confirm) {
             chessesArr[x][y] = 0
+            // player === 1 && -- blueNum
+            player === 2 && --redNum
             this.setData({
               chessesArr,
-              player: this.data.player === 1 ? 2 : 1,
-              step2ChessNum: ++ step2ChessNum
+              player: player === 1 ? 2 : 1,
+              step2ChessNum: ++ step2ChessNum,
+              redNum,
+              blueNum
             })
           }
           if (this.data.step2ChessNum === 2) {
@@ -261,25 +363,21 @@ Page({
 
   // ----------------------------------下棋---------------------------------------
   checkoutChess (e) { // 下棋操作
-    const { currentStep } = this.data
+    const { currentStep, player, socket } = this.data
     if (currentStep === 3) {
       this.moveChess(e)
-
       return
     } // 因为微信只能绑定一个方法....这样代理吧
     if (currentStep === 2) {
-      wx.showToast({
-        title: '已进入第二阶段, 长按删除',
-        icon: 'none'
-      })
+      this.setMessage('进入第二阶段啦, 长按删除即可')
       return
     }
     if (currentStep === 4) return
 
-    const chessIndex = utils.getDataByPath(e, 'currentTarget.dataset.chessindex'),
+    const chessIndex = e.currentTarget.dataset.chessindex,
       x = chessIndex[0], y = chessIndex[1],
       currentChessArr = [...this.data.chessesArr]
-    let { player, redNum, blueNum } = this.data
+    let { redNum, blueNum } = this.data
     if (currentChessArr[x][y] !== 0 || this.data.highLighting) return
 
     if (player === 1) {
@@ -314,6 +412,10 @@ Page({
       return
     }
 
+    this.sendMessage('step1', {
+      chessesArr: this.data.chessesArr,
+      player
+    })
     // 落完子检查
     let found = this.checkFound(x, y) // 方
     let oblique = this.checkOblique(x, y) // 斜
@@ -322,7 +424,6 @@ Page({
     // 取出应该高亮的棋子
     const needHighLightChess = [...found.needHighLightChess, ...oblique.needHighLightChess, ...five.needHighLightChess]
     this.highLightChess(...needHighLightChess)
-    console.log(`本次下子, ${player === 1 ? 'red' : 'blue'}形成: ${found.foundNum}方, ${oblique.three}小斜, ${oblique.four}大斜, ${oblique.five}大通, ${five.colAndRowNum}五通`)
 
     // 根据形成的规则决定下一局是谁
     let foundNum = found.foundNum,
@@ -334,6 +435,8 @@ Page({
     this.setData({
       addChessNum: currentRestNum + foundNum + smallOblique + 2 * middleOblique + 3 * bigOblique + 2 * fiveNum
     })
+
+    this.data.addChessNum > 0 && this.setMessage(`您可以多下 ${this.data.addChessNum} 个棋子`)
 
     let thisPlayer = this.data.player,
       addChessNum = this.data.addChessNum,

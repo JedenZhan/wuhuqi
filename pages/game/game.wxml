@@ -1,7 +1,16 @@
 <view class="wrapper">
   <!-- 对方 -->
   <view class="other">
-
+    <view class="image-wrapper">
+      <image src="../../assets/test-header.jpeg" class="{{'head-image' + (player === 2 ? ' highlight-header' : '')}}"></image>
+      
+    </view>
+    <view class="info-wrapper">
+      <view class="message">
+        <view>{{ opponent.username }}</view>
+        <view>{{ blueMessage }}</view>
+      </view>
+    </view>
   </view>
 
   <!-- 棋盘 -->
@@ -45,6 +54,14 @@
 
   <!-- 我方 -->
   <view class="me">
-
+    <view class="info-wrapper">
+      <view class="message red-message">
+        <view>{{ mine.username }}</view>
+        <view>{{ redMessage }}</view>
+      </view>
+    </view>
+      <view class="image-wrapper">
+        <image src="{{mine.headerUrl}}" class="{{ 'head-image' + (player === 1 ? ' highlight-header' : '') }}"></image>
+      </view>
   </view>
 </view>
